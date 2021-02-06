@@ -33,6 +33,10 @@ public class Machine {
     Line rodB;
 
     public Machine() {
+        reset();
+    }
+
+    public void reset() {
         canvas = new Rotor(new Point(300, 300), 0, canvasSpeed, 0);
 
         double towerABTheta = getThetaFromLegs(towerADistance, towerBDistance, towerABDistance);

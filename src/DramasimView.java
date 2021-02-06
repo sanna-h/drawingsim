@@ -3,21 +3,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import static java.lang.Math.*;
 
-public class BasicEx extends JComponent {
+public class DramasimView extends JPanel {
 
-    double maxTheta = 100 * 2 * PI;
-    Machine machine = new Machine();
+    double machineTurns = 100;
+    boolean viewMachine = false;
+    Machine machine;
 
-    BufferedImage canvas = new BufferedImage(700, 700, BufferedImage.TYPE_INT_ARGB);
-
-    public BasicEx() {
+    public DramasimView(Machine model) {
+        machine = model;
         Timer timer = new Timer(1000, new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -30,6 +27,7 @@ public class BasicEx extends JComponent {
 
     @Override
     public void paint(Graphics g) {
+        super.paint(g);
         Graphics2D g2 = (Graphics2D) g;
 
         g2 = (Graphics2D) g;
@@ -40,7 +38,7 @@ public class BasicEx extends JComponent {
 
         long startTime = System.currentTimeMillis();
         GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
-        for (int crankedDegrees = 0; crankedDegrees < 100 * 360; crankedDegrees += 2) {
+        for (int crankedDegrees = 0; crankedDegrees < machineTurns * 360; crankedDegrees += 2) {
             double theta = crankedDegrees * 2 * PI / 360;
             machine.setRotation(theta);
 
@@ -54,17 +52,31 @@ public class BasicEx extends JComponent {
         g2.draw(path);
         g2.setStroke(new BasicStroke(4.0f));
         long executionTime = System.currentTimeMillis() - startTime;
-        machine.draw(g2);
+        if (viewMachine)
+            machine.draw(g2);
     }
 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Ritmaskinssimulator");
+        JFrame frame = new JFrame("DraMaSim");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.getContentPane().setLayout(new GridLayout(1, 1));
-        frame.getContentPane().add(new BasicEx());
-        //frame.getContentPane().add(new JButton("Uppdatera"));
+
+        Machine model = new Machine();
+        DramasimView view = new DramasimView(model);
+        frame.add(view, BorderLayout.CENTER);
+
+        DramasimController controller = new DramasimController(model, view);
+
+        JPanel eastPanel = new JPanel();
+        eastPanel.setLayout(new FlowLayout());
+        eastPanel.add(controller);
+        frame.add(eastPanel, BorderLayout.EAST);
+
         frame.pack();
-        frame.setSize(new Dimension(700, 700));
+        frame.setSize(new Dimension(900, 700));
         frame.setVisible(true);
+    }
+
+    void redraw() {
+        repaint();
     }
 }
