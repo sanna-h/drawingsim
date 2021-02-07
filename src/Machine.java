@@ -1,7 +1,12 @@
+import lombok.Getter;
+import lombok.Setter;
+
 import java.awt.*;
 
 import static java.lang.Math.*;
 
+@Getter
+@Setter
 public class Machine {
 
     double canvasSpeed = 0.01;
@@ -83,6 +88,7 @@ public class Machine {
         towerA.draw(g2);
         towerB.draw(g2);
         towerC.draw(g2);
+        canvas.location.draw(g2);
         rodA.draw(g2);
         rodB.draw(g2);
     }

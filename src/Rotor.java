@@ -36,7 +36,7 @@ class Rotor {
 
     public void draw(Graphics2D g2) {
         Point center = getCenter();
-        g2.setColor(Color.lightGray);
+        g2.setColor(Color.blue);
         Shape theCircle = new Ellipse2D.Double(center.x - radius, center.y - radius, 2.0 * radius, 2.0 * radius);
         g2.draw(theCircle);
 

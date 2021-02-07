@@ -1,4 +1,7 @@
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -7,6 +10,8 @@ import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import static java.lang.Math.*;
 
+@Getter
+@Setter
 public class DramasimView extends JPanel {
 
     double machineTurns = 100;
