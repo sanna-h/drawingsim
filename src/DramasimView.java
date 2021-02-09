@@ -15,6 +15,7 @@ import static java.lang.Math.*;
 public class DramasimView extends JPanel {
 
     double machineTurns = 100;
+    double scale = 1;
     boolean viewMachine = false;
     Machine machine;
 
@@ -40,6 +41,9 @@ public class DramasimView extends JPanel {
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(Color.black);
         g2.setStroke(new BasicStroke(0.7f));
+        Dimension d = getSize();
+        g2.translate(d.width / 2,  d.height / 2);
+        g2.scale(scale, scale);
 
         long startTime = System.currentTimeMillis();
         GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD);

@@ -14,35 +14,35 @@ public class Machine {
     double towerASpeed = 2; // -0.5;
     double towerADistance = 301;
     double towerARadius = 60;
-    double towerAStartTheta = 0;
+    double towerAStartAngle = 0;
 
     double towerBSpeed = 2.03; //1;
     double towerBDistance = 225;
     double towerBRadius = 45;
-    double towerBStartTheta = 0;
+    double towerBStartAngle = 0;
 
     double towerABDistance = 180;
     double towerCSpeed = 0.5; //-1.5;
     double towerCRadius = 0;
-    double towerCStartTheta = 0;
+    double towerCStartAngle = 0;
 
     double rodABaseLength = 225;
     double rodAExtensionLength = 112.5;
     double rodBLength = 225;
 
-    Rotor canvas;
-    Rotor towerA;
-    Rotor towerB;
-    Rotor towerC;
-    Line rodA;
-    Line rodB;
+    transient Rotor canvas;
+    transient Rotor towerA;
+    transient Rotor towerB;
+    transient Rotor towerC;
+    transient Line rodA;
+    transient Line rodB;
 
     public Machine() {
         reset();
     }
 
     public void reset() {
-        canvas = new Rotor(new Point(300, 300), 0, canvasSpeed, 0);
+        canvas = new Rotor(new Point(0, 0), 0, canvasSpeed, 0);
 
         double towerABTheta = getThetaFromLegs(towerADistance, towerBDistance, towerABDistance);
         Point towerALocation = new Point(canvas.location.x, canvas.location.y + towerADistance);
@@ -50,9 +50,9 @@ public class Machine {
         Point towerBLocation = new Point(canvas.location.x, canvas.location.y + towerBDistance);
         towerBLocation.Rotate(canvas.location, towerABTheta / 2);
 
-        towerA = new Rotor(towerALocation, towerARadius, towerASpeed, towerAStartTheta);
-        towerB = new Rotor(towerBLocation, towerBRadius, towerBSpeed, towerBStartTheta);
-        towerC = new Rotor(towerB, towerCRadius, towerCSpeed, towerCStartTheta);
+        towerA = new Rotor(towerALocation, towerARadius, towerASpeed, Math.toRadians(towerAStartAngle));
+        towerB = new Rotor(towerBLocation, towerBRadius, towerBSpeed, Math.toRadians(towerBStartAngle));
+        towerC = new Rotor(towerB, towerCRadius, towerCSpeed, Math.toRadians(towerCStartAngle));
     }
 
     public void setRotation(double theta) {
