@@ -2,15 +2,18 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.AllArgsConstructor;
 
+import javax.naming.PartialResultException;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
@@ -23,16 +26,36 @@ class ModelProperty {
     JTextField textField;
 }
 
+class FocusTextField extends JTextField {
+    {
+        addFocusListener(new FocusListener() {
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                FocusTextField.this.select(0, getText().length());
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                FocusTextField.this.select(0, 0);
+            }
+        });
+    }
+}
+
 public class DramasimController extends JPanel {
 
     Machine model;
     DramasimView view;
-    ArrayList<ModelProperty> modelProperties = new ArrayList<ModelProperty>();
+    ArrayList<ModelProperty> modelProperties = new ArrayList<>();
     String group;
 
     JCheckBox viewMachine = new JCheckBox("Show machine");
 
     public DramasimController(Machine model, DramasimView view) {
+
+        this.model = model;
+        this.view = view;
 
         group = "Setup";
         addProperty("Duration", view::getMachineTurns, view::setMachineTurns);
@@ -79,46 +102,54 @@ public class DramasimController extends JPanel {
         add(viewMachine);
         add(Box.createRigidArea(new Dimension(0,10)));
         JButton drawButton = new JButton("Redraw");
-        drawButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                for (ModelProperty mp : modelProperties) {
-                    mp.setter.accept(Double.parseDouble(mp.textField.getText()));
-                }
-                view.viewMachine = viewMachine.isSelected();
-                model.reset();
-                view.redraw();
-            }
-        });
+        drawButton.addActionListener(e -> updateAndRedraw());
         add(drawButton);
+
         JButton saveButton = new JButton("Save as...");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String json = gson.toJson(model);
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setDialogTitle("Specify a file to save");
-
-                int userSelection = fileChooser.showSaveDialog(view.getParent());
-
-                if (userSelection == JFileChooser.APPROVE_OPTION) {
-                    File fileToSave = fileChooser.getSelectedFile();
-                    try {
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave));
-                        writer.write(json);
-                        writer.close();
-                    } catch (IOException ex) {
-
-                    }
-                }
-            }
-        });
+        saveButton.addActionListener(e -> saveToFile());
         add(saveButton);
     }
 
+    private void updateAndRedraw() {
+        for (ModelProperty mp : modelProperties) {
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            String text = mp.textField.getText();
+            try {
+                Number value = nf.parse(text);
+                double doubleValue = value.doubleValue();
+                mp.setter.accept(doubleValue);
+            } catch (ParseException ex) {
+                mp.textField.setBackground(Color.PINK);
+            }
+        }
+        view.viewMachine = viewMachine.isSelected();
+        model.reset();
+        view.redraw();
+    }
+
+    private void saveToFile() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(model);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Specify a file to save");
+
+        int userSelection = fileChooser.showSaveDialog(view.getParent());
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            try {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave));
+                writer.write(json);
+                writer.close();
+                JOptionPane.showMessageDialog(null, "File saved.", "Save", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Failed to save file: " + ex.getMessage(), "Save", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     private void addProperty(String name, DoubleSupplier getter, DoubleConsumer setter) {
-        modelProperties.add(new ModelProperty(group, name, getter, setter, new JTextField()));
+        modelProperties.add(new ModelProperty(group, name, getter, setter, new FocusTextField()));
     }
 
     private JPanel createGroup(String name) {
@@ -140,9 +171,32 @@ public class DramasimController extends JPanel {
         label.setFont(new Font("SansSerif", Font.PLAIN, 10));
         label.setHorizontalAlignment(SwingConstants.LEFT);
         panel.add(label);
-        textField.setText(Double.toString(value));
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+        textField.setText(nf.format(value));
         textField.setBorder(BorderFactory.createEmptyBorder());
         textField.setBackground(new Color(205,205,205));
+        textField.addKeyListener(new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+                    updateAndRedraw();
+                    if(e.getSource() instanceof FocusTextField)
+                        ((FocusTextField) e.getSource()).selectAll();
+                }
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+
+            }
+        });
         panel.add(textField);
         return panel;
     }
