@@ -30,6 +30,11 @@ public class Machine {
     double rodAExtensionLength = 112.5;
     double rodBLength = 225;
 
+    double machineTurns = 100;
+    double scale = 1;
+    boolean viewMachine = false;
+
+
     transient Rotor canvas;
     transient Rotor towerA;
     transient Rotor towerB;

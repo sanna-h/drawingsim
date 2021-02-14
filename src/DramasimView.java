@@ -14,40 +14,27 @@ import static java.lang.Math.*;
 @Setter
 public class DramasimView extends JPanel {
 
-    double machineTurns = 100;
-    double scale = 1;
-    boolean viewMachine = false;
     Machine machine;
 
     public DramasimView(Machine model) {
         machine = model;
-        Timer timer = new Timer(1000, new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //crankedDegrees += 10;
-                repaint();
-            }
-        });
-        timer.start();
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
         Graphics2D g2 = (Graphics2D) g;
-
-        g2 = (Graphics2D) g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(Color.black);
         g2.setStroke(new BasicStroke(0.7f));
         Dimension d = getSize();
         g2.translate(d.width / 2,  d.height / 2);
-        g2.scale(scale, scale);
+        g2.scale(machine.scale, machine.scale);
 
         long startTime = System.currentTimeMillis();
         GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
-        for (int crankedDegrees = 0; crankedDegrees < machineTurns * 360; crankedDegrees += 2) {
+        for (int crankedDegrees = 0; crankedDegrees < machine.machineTurns * 360; crankedDegrees += 2) {
             double theta = crankedDegrees * 2 * PI / 360;
             machine.setRotation(theta);
 
@@ -61,7 +48,7 @@ public class DramasimView extends JPanel {
         g2.draw(path);
         g2.setStroke(new BasicStroke(4.0f));
         long executionTime = System.currentTimeMillis() - startTime;
-        if (viewMachine)
+        if (machine.viewMachine)
             machine.draw(g2);
     }
 

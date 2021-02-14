@@ -1,5 +1,6 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
 import lombok.AllArgsConstructor;
 
 import javax.naming.PartialResultException;
@@ -10,6 +11,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -59,9 +63,9 @@ public class DramasimController extends JPanel {
         this.view = view;
 
         group = "Setup";
-        addProperty("Duration", view::getMachineTurns, view::setMachineTurns);
+        addProperty("Duration", model::getMachineTurns, model::setMachineTurns);
         addProperty("Canvas speed", model::getCanvasSpeed, model::setCanvasSpeed);
-        addProperty("Scale", view::getScale, view::setScale);
+        addProperty("Scale", model::getScale, model::setScale);
 
         group = "Measurements";
         addProperty("Canvas - rotor A", model::getTowerADistance, model::setTowerADistance);
@@ -106,9 +110,14 @@ public class DramasimController extends JPanel {
         drawButton.addActionListener(e -> updateAndRedraw());
         add(drawButton);
 
-        JButton saveButton = new JButton("Save as...");
+        JButton saveButton = new JButton("Save file");
         saveButton.addActionListener(e -> saveToFile());
         add(saveButton);
+
+        JButton loadButton = new JButton("Open file");
+        loadButton.addActionListener(e -> loadFile());
+        add(loadButton);
+
     }
 
     private void updateAndRedraw() {
@@ -123,7 +132,7 @@ public class DramasimController extends JPanel {
                 mp.textField.setBackground(Color.PINK);
             }
         }
-        view.viewMachine = viewMachine.isSelected();
+        model.viewMachine = viewMachine.isSelected();
         model.reset();
         view.redraw();
     }
@@ -147,6 +156,34 @@ public class DramasimController extends JPanel {
                 JOptionPane.showMessageDialog(null, "Failed to save file: " + ex.getMessage(), "Save", JOptionPane.ERROR_MESSAGE);
             }
         }
+    }
+
+    private void loadFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Specify a file to load");
+
+        int userSelection = fileChooser.showOpenDialog(view.getParent());
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToLoad = fileChooser.getSelectedFile();
+            String jsonString;
+            try {
+                jsonString = Files.readString(fileToLoad.toPath(), Charset.defaultCharset());
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Failed to load file: " + ex.getMessage(), "Load", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            InstanceCreator<Machine> creator = type -> model;
+            Gson gson = new GsonBuilder().registerTypeAdapter(Machine.class, creator).create();
+            gson.fromJson(jsonString, Machine.class);
+            for(ModelProperty mp : modelProperties) {
+                NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+                mp.textField.setText(nf.format(mp.getter.getAsDouble()));
+            }
+            updateAndRedraw();
+        }
+
     }
 
     private void addProperty(String name, DoubleSupplier getter, DoubleConsumer setter) {
