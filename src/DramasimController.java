@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -115,7 +116,7 @@ public class DramasimController extends JPanel {
             NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
             String text = mp.textField.getText();
             try {
-                Number value = nf.parse(text);
+                Number value = nf.parse(text.replace('-', new DecimalFormatSymbols().getMinusSign()));
                 double doubleValue = value.doubleValue();
                 mp.setter.accept(doubleValue);
             } catch (ParseException ex) {
