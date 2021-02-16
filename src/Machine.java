@@ -2,6 +2,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.awt.*;
+import java.awt.geom.GeneralPath;
 
 import static java.lang.Math.*;
 
@@ -9,6 +10,8 @@ import static java.lang.Math.*;
 @Setter
 public class Machine {
 
+    double canvasWidth = 210;
+    double canvasHeight = 297;
     double canvasSpeed = 0.01;
 
     double towerASpeed = 2; // -0.5;
@@ -96,6 +99,14 @@ public class Machine {
         canvas.location.draw(g2);
         rodA.draw(g2);
         rodB.draw(g2);
+        g2.setColor(Color.GRAY);
+        GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD);
+        path.moveTo(canvas.location.x - canvasWidth / 2, canvas.location.y - canvasHeight / 2);
+        path.lineTo(canvas.location.x + canvasWidth / 2, canvas.location.y - canvasHeight / 2);
+        path.lineTo(canvas.location.x + canvasWidth / 2, canvas.location.y + canvasHeight / 2);
+        path.lineTo(canvas.location.x - canvasWidth / 2, canvas.location.y + canvasHeight / 2);
+        path.closePath();
+        g2.draw(path);
     }
 
 }

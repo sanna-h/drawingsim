@@ -50,6 +50,7 @@ public class DramasimView extends JPanel {
         long executionTime = System.currentTimeMillis() - startTime;
         if (machine.viewMachine)
             machine.draw(g2);
+
     }
 
     public static void main(String[] args) {

@@ -65,6 +65,8 @@ public class DramasimController extends JPanel {
         group = "Setup";
         addProperty("Duration", model::getMachineTurns, model::setMachineTurns);
         addProperty("Canvas speed", model::getCanvasSpeed, model::setCanvasSpeed);
+        addProperty("Canvas width", model::getCanvasWidth, model::setCanvasWidth);
+        addProperty("Canvas height", model::getCanvasHeight, model::setCanvasHeight);
         addProperty("Scale", model::getScale, model::setScale);
 
         group = "Measurements";
