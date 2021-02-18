@@ -3,7 +3,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.InstanceCreator;
 import lombok.AllArgsConstructor;
 
-import javax.naming.PartialResultException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -11,7 +10,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.DecimalFormatSymbols;
@@ -28,7 +26,8 @@ class ModelProperty {
     String name;
     DoubleSupplier getter;
     DoubleConsumer setter;
-    JTextField textField;
+    FocusTextField valueField;
+    FocusTextField deltaField;
 }
 
 class FocusTextField extends JTextField {
@@ -45,10 +44,20 @@ class FocusTextField extends JTextField {
                 FocusTextField.this.select(0, 0);
             }
         });
+        setBorder(BorderFactory.createEmptyBorder());
+        setBackground(new Color(205,205,205));
+        setMaximumSize(new Dimension(30,12));
+        setPreferredSize(new Dimension(30,12));
+        setMinimumSize(new Dimension(30,12));
+        setSize(new Dimension(30,12));
+    }
+
+    public void setErrorState(boolean error) {
+        setBackground(error ? Color.PINK : new Color(205,205,205));
     }
 }
 
-public class DramasimController extends JPanel {
+public class DramasimController extends JPanel  implements KeyListener {
 
     Machine model;
     DramasimView view;
@@ -91,6 +100,7 @@ public class DramasimController extends JPanel {
         addProperty("Radius", model::getTowerCRadius, model::setTowerCRadius);
         addProperty("Start angle", model::getTowerCStartAngle, model::setTowerCStartAngle);
         addProperty("Speed", model::getTowerCSpeed, model::setTowerCSpeed);
+        showPropertyValues();
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         add(Box.createVerticalGlue());
@@ -101,16 +111,21 @@ public class DramasimController extends JPanel {
                 add(Box.createRigidArea(new Dimension(0,2)));
                 group = mp.group;
             }
-            add(createField(mp.name, mp.textField, mp.getter.getAsDouble()));
+            add(createField(mp.name, mp.valueField, mp.deltaField));
             add(Box.createRigidArea(new Dimension(0,2)));
         }
 
         add(Box.createRigidArea(new Dimension(0,10)));
         add(viewMachine);
         add(Box.createRigidArea(new Dimension(0,10)));
+
         JButton drawButton = new JButton("Redraw");
         drawButton.addActionListener(e -> updateAndRedraw());
         add(drawButton);
+
+        JButton applyDeltaButton = new JButton("Apply delta");
+        applyDeltaButton.addActionListener(e -> applyDelta());
+        add(applyDeltaButton);
 
         JButton saveButton = new JButton("Save file");
         saveButton.addActionListener(e -> saveToFile());
@@ -124,17 +139,29 @@ public class DramasimController extends JPanel {
 
     private void updateAndRedraw() {
         for (ModelProperty mp : modelProperties) {
-            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-            String text = mp.textField.getText();
-            try {
-                Number value = nf.parse(text.replace('-', new DecimalFormatSymbols().getMinusSign()));
-                double doubleValue = value.doubleValue();
-                mp.setter.accept(doubleValue);
-            } catch (ParseException ex) {
-                mp.textField.setBackground(Color.PINK);
-            }
+            String text = mp.valueField.getText();
+            Double value = parseDouble(text);
+            if (value != null)
+                mp.setter.accept(value);
+            mp.valueField.setErrorState(value == null);
         }
         model.viewMachine = viewMachine.isSelected();
+        model.reset();
+        view.redraw();
+    }
+
+    private void applyDelta() {
+        for (ModelProperty mp : modelProperties) {
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            String text = mp.deltaField.getText();
+            if (!text.isBlank()) {
+                Double delta = parseDouble(text);
+                if (delta != null)
+                    mp.setter.accept(mp.getter.getAsDouble() + delta);
+                mp.deltaField.setErrorState(delta == null);
+            }
+        }
+        showPropertyValues();
         model.reset();
         view.redraw();
     }
@@ -179,17 +206,30 @@ public class DramasimController extends JPanel {
             InstanceCreator<Machine> creator = type -> model;
             Gson gson = new GsonBuilder().registerTypeAdapter(Machine.class, creator).create();
             gson.fromJson(jsonString, Machine.class);
-            for(ModelProperty mp : modelProperties) {
-                NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-                mp.textField.setText(nf.format(mp.getter.getAsDouble()));
-            }
+            showPropertyValues();
             updateAndRedraw();
         }
+    }
 
+    private Double parseDouble(String text) {
+        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+        try {
+            Number value = nf.parse(text.replace('-', new DecimalFormatSymbols().getMinusSign()));
+            return value.doubleValue();
+        } catch (ParseException ex) {
+            return null;
+        }
+    }
+
+    private void showPropertyValues() {
+        for(ModelProperty mp : modelProperties) {
+            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
+            mp.valueField.setText(nf.format(mp.getter.getAsDouble()));
+        }
     }
 
     private void addProperty(String name, DoubleSupplier getter, DoubleConsumer setter) {
-        modelProperties.add(new ModelProperty(group, name, getter, setter, new FocusTextField()));
+        modelProperties.add(new ModelProperty(group, name, getter, setter, new FocusTextField(), new FocusTextField()));
     }
 
     private JPanel createGroup(String name) {
@@ -203,7 +243,7 @@ public class DramasimController extends JPanel {
         return panel;
     }
 
-    private JPanel createField(String labelText, JTextField textField, double value) {
+    private JPanel createField(String labelText, JTextField valueField, JTextField deltaField) {
         var panel = new JPanel();
         //panel.setLayout(new BoxLayout(panel, BoxLayout.LINE_AXIS));
         panel.setLayout(new GridLayout(1, 2));
@@ -211,34 +251,38 @@ public class DramasimController extends JPanel {
         label.setFont(new Font("SansSerif", Font.PLAIN, 10));
         label.setHorizontalAlignment(SwingConstants.LEFT);
         panel.add(label);
-        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
-        textField.setText(nf.format(value));
-        textField.setBorder(BorderFactory.createEmptyBorder());
-        textField.setBackground(new Color(205,205,205));
-        textField.addKeyListener(new KeyListener() {
 
-            @Override
-            public void keyTyped(KeyEvent e) {
-                if (e.getKeyChar() == KeyEvent.VK_ENTER) {
-                    updateAndRedraw();
-                    if(e.getSource() instanceof FocusTextField)
-                        ((FocusTextField) e.getSource()).selectAll();
-                }
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
-        });
-        panel.add(textField);
+        var valuePanel = new JPanel();
+        var layout = new GridLayout(1, 2);
+        layout.setHgap(3);
+        valuePanel.setLayout(layout);
+        valuePanel.add(valueField);
+        valueField.addKeyListener(this);
+        valuePanel.add(deltaField);
+        panel.add(valuePanel);
         return panel;
     }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+            updateAndRedraw();
+            if(e.getSource() instanceof FocusTextField)
+                ((FocusTextField) e.getSource()).selectAll();
+        }
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
+    }
+
+
 
 }
