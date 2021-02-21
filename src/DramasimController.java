@@ -31,12 +31,13 @@ class ModelProperty {
 }
 
 class FocusTextField extends JTextField {
+    static Color backgroundColor = new Color(205,205,205);
+
     {
         addFocusListener(new FocusListener() {
-
             @Override
             public void focusGained(FocusEvent e) {
-                FocusTextField.this.select(0, getText().length());
+                FocusTextField.this.select(0, FocusTextField.this.getText().length());
             }
 
             @Override
@@ -45,13 +46,8 @@ class FocusTextField extends JTextField {
             }
         });
         setBorder(BorderFactory.createEmptyBorder());
-        setBackground(new Color(205,205,205));
-        setMaximumSize(new Dimension(30,12));
-        setPreferredSize(new Dimension(30,12));
-        setMinimumSize(new Dimension(30,12));
-        setSize(new Dimension(30,12));
+        setBackground(backgroundColor);
     }
-
     public void setErrorState(boolean error) {
         setBackground(error ? Color.PINK : new Color(205,205,205));
     }
@@ -63,10 +59,15 @@ public class DramasimController extends JPanel  implements KeyListener {
     DramasimView view;
     ArrayList<ModelProperty> modelProperties = new ArrayList<>();
     String group;
+    Locale currentLocale;
+    NumberFormat nf;
 
     JCheckBox viewMachine = new JCheckBox("Show machine");
 
     public DramasimController(Machine model, DramasimView view) {
+
+        currentLocale = Locale.getDefault();
+        nf = NumberFormat.getInstance(currentLocale);
 
         this.model = model;
         this.view = view;
@@ -123,9 +124,13 @@ public class DramasimController extends JPanel  implements KeyListener {
         drawButton.addActionListener(e -> updateAndRedraw());
         add(drawButton);
 
-        JButton applyDeltaButton = new JButton("Apply delta");
-        applyDeltaButton.addActionListener(e -> applyDelta());
-        add(applyDeltaButton);
+        JButton addDeltaButton = new JButton("Add delta");
+        addDeltaButton.addActionListener(e -> applyDelta(1));
+        add(addDeltaButton);
+
+        JButton subtractDeltaButton = new JButton("Subtract delta");
+        subtractDeltaButton.addActionListener(e -> applyDelta(-1));
+        add(subtractDeltaButton);
 
         JButton saveButton = new JButton("Save file");
         saveButton.addActionListener(e -> saveToFile());
@@ -150,14 +155,13 @@ public class DramasimController extends JPanel  implements KeyListener {
         view.redraw();
     }
 
-    private void applyDelta() {
+    private void applyDelta(double sign) {
         for (ModelProperty mp : modelProperties) {
-            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
             String text = mp.deltaField.getText();
             if (!text.isBlank()) {
                 Double delta = parseDouble(text);
                 if (delta != null)
-                    mp.setter.accept(mp.getter.getAsDouble() + delta);
+                    mp.setter.accept(mp.getter.getAsDouble() + delta * sign);
                 mp.deltaField.setErrorState(delta == null);
             }
         }
@@ -212,9 +216,8 @@ public class DramasimController extends JPanel  implements KeyListener {
     }
 
     private Double parseDouble(String text) {
-        NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
         try {
-            Number value = nf.parse(text.replace('-', new DecimalFormatSymbols().getMinusSign()));
+            Number value = nf.parse(text.replace('-', new DecimalFormatSymbols(currentLocale).getMinusSign()));
             return value.doubleValue();
         } catch (ParseException ex) {
             return null;
@@ -223,7 +226,6 @@ public class DramasimController extends JPanel  implements KeyListener {
 
     private void showPropertyValues() {
         for(ModelProperty mp : modelProperties) {
-            NumberFormat nf = NumberFormat.getInstance(Locale.getDefault());
             mp.valueField.setText(nf.format(mp.getter.getAsDouble()));
         }
     }
@@ -274,15 +276,9 @@ public class DramasimController extends JPanel  implements KeyListener {
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
-
-    }
+    public void keyPressed(KeyEvent e) {}
 
     @Override
-    public void keyReleased(KeyEvent e) {
-
-    }
-
-
+    public void keyReleased(KeyEvent e) {}
 
 }
