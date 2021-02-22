@@ -69,7 +69,7 @@ public class DramasimView extends JPanel {
         frame.add(eastPanel, BorderLayout.EAST);
 
         frame.pack();
-        frame.setSize(new Dimension(900, 700));
+        frame.setSize(new Dimension(900, 800));
         frame.setVisible(true);
     }
 

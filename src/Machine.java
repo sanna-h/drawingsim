@@ -12,19 +12,23 @@ public class Machine {
 
     double canvasWidth = 210;
     double canvasHeight = 297;
+    double canvasGearing = 1;
     double canvasSpeed = 0.01;
 
+    double towerAGearing = 1;
     double towerASpeed = 2; // -0.5;
     double towerADistance = 301;
     double towerARadius = 60;
     double towerAStartAngle = 0;
 
+    double towerBGearing = 1;
     double towerBSpeed = 2.03; //1;
     double towerBDistance = 225;
     double towerBRadius = 45;
     double towerBStartAngle = 0;
 
     double towerABDistance = 180;
+    double towerCGearing = 1;
     double towerCSpeed = 0.5; //-1.5;
     double towerCRadius = 0;
     double towerCStartAngle = 0;
@@ -50,7 +54,7 @@ public class Machine {
     }
 
     public void reset() {
-        canvas = new Rotor(new Point(0, 0), 0, canvasSpeed, 0);
+        canvas = new Rotor(new Point(0, 0), 0, canvasSpeed, canvasGearing, 0);
 
         double towerABTheta = getThetaFromLegs(towerADistance, towerBDistance, towerABDistance);
         Point towerALocation = new Point(canvas.location.x, canvas.location.y + towerADistance);
@@ -58,16 +62,16 @@ public class Machine {
         Point towerBLocation = new Point(canvas.location.x, canvas.location.y + towerBDistance);
         towerBLocation.Rotate(canvas.location, towerABTheta / 2);
 
-        towerA = new Rotor(towerALocation, towerARadius, towerASpeed, Math.toRadians(towerAStartAngle));
-        towerB = new Rotor(towerBLocation, towerBRadius, towerBSpeed, Math.toRadians(towerBStartAngle));
-        towerC = new Rotor(towerB, towerCRadius, towerCSpeed, Math.toRadians(towerCStartAngle));
+        towerA = new Rotor(towerALocation, towerARadius, towerASpeed, towerAGearing, Math.toRadians(towerAStartAngle));
+        towerB = new Rotor(towerBLocation, towerBRadius, towerBSpeed, towerBGearing, Math.toRadians(towerBStartAngle));
+        towerC = new Rotor(towerB, towerCRadius, towerCSpeed, towerCGearing, Math.toRadians(towerCStartAngle));
     }
 
     public void setRotation(double theta) {
-        canvas.theta = theta * canvas.speed;
-        towerA.theta = theta * towerA.speed;
-        towerB.theta = theta * towerB.speed;
-        towerC.theta = theta * towerC.speed;
+        canvas.theta = theta * canvas.speed * canvas.gearing;
+        towerA.theta = theta * towerA.speed * towerA.gearing;
+        towerB.theta = theta * towerB.speed * towerB.gearing;
+        towerC.theta = theta * towerC.speed * towerC.gearing;
         moveRods();
     }
 

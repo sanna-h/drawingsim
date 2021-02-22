@@ -10,20 +10,23 @@ class Rotor {
     public Rotor baseRotor;
     public double radius;
     public double speed;
+    public double gearing;
     public double startTheta;
     public double theta;
 
-    public Rotor(Point location, double radius, double speed, double startTheta) {
+    public Rotor(Point location, double radius, double speed, double gearing, double startTheta) {
         this.location = location;
         this.radius = radius;
         this.speed = speed;
+        this.gearing = gearing;
         this.startTheta = startTheta;
     }
 
-    public Rotor(Rotor baseRotor, double radius, double speed, double startTheta) {
+    public Rotor(Rotor baseRotor, double radius, double speed, double gearing, double startTheta) {
         this.baseRotor = baseRotor;
         this.radius = radius;
         this.speed = speed;
+        this.gearing = gearing;
         this.startTheta = startTheta;
     }
 

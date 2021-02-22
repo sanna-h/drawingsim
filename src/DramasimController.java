@@ -75,6 +75,7 @@ public class DramasimController extends JPanel  implements KeyListener {
         group = "Setup";
         addProperty("Duration", model::getMachineTurns, model::setMachineTurns);
         addProperty("Canvas speed", model::getCanvasSpeed, model::setCanvasSpeed);
+        addProperty("Canvas gearing", model::getCanvasGearing, model::setCanvasGearing);
         addProperty("Canvas width", model::getCanvasWidth, model::setCanvasWidth);
         addProperty("Canvas height", model::getCanvasHeight, model::setCanvasHeight);
         addProperty("Scale", model::getScale, model::setScale);
@@ -91,16 +92,19 @@ public class DramasimController extends JPanel  implements KeyListener {
         addProperty("Radius", model::getTowerARadius, model::setTowerARadius);
         addProperty("Start angle", model::getTowerAStartAngle, model::setTowerAStartAngle);
         addProperty("Speed", model::getTowerASpeed, model::setTowerASpeed);
+        addProperty("Gearing", model::getTowerAGearing, model::setTowerAGearing);
 
         group = "Rotor B";
         addProperty("Radius", model::getTowerBRadius, model::setTowerBRadius);
         addProperty("Start angle", model::getTowerBStartAngle, model::setTowerBStartAngle);
         addProperty("Speed", model::getTowerBSpeed, model::setTowerBSpeed);
+        addProperty("Gearing", model::getTowerBGearing, model::setTowerBGearing);
 
         group = "Rotor C";
         addProperty("Radius", model::getTowerCRadius, model::setTowerCRadius);
         addProperty("Start angle", model::getTowerCStartAngle, model::setTowerCStartAngle);
         addProperty("Speed", model::getTowerCSpeed, model::setTowerCSpeed);
+        addProperty("Gearing", model::getTowerCGearing, model::setTowerCGearing);
         showPropertyValues();
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
