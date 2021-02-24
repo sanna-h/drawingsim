@@ -68,6 +68,7 @@ public class DramasimController extends JPanel  implements KeyListener {
 
         currentLocale = Locale.getDefault();
         nf = NumberFormat.getInstance(currentLocale);
+        nf.setMaximumFractionDigits(13);
 
         this.model = model;
         this.view = view;
