@@ -39,6 +39,7 @@ public class Machine {
 
     double machineTurns = 100;
     double scale = 1;
+    double penWidth = 0.7;
     boolean viewMachine = false;
 
 

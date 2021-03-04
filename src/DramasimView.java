@@ -27,7 +27,7 @@ public class DramasimView extends JPanel {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                 RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(Color.black);
-        g2.setStroke(new BasicStroke(0.7f));
+        g2.setStroke(new BasicStroke((float) machine.penWidth));
         Dimension d = getSize();
         g2.translate(d.width / 2,  d.height / 2);
         g2.scale(machine.scale, machine.scale);

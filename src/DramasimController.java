@@ -80,6 +80,7 @@ public class DramasimController extends JPanel  implements KeyListener {
         addProperty("Canvas width", model::getCanvasWidth, model::setCanvasWidth);
         addProperty("Canvas height", model::getCanvasHeight, model::setCanvasHeight);
         addProperty("Scale", model::getScale, model::setScale);
+        addProperty("Pen width", model::getPenWidth, model::setPenWidth);
 
         group = "Measurements";
         addProperty("Canvas - rotor A", model::getTowerADistance, model::setTowerADistance);
