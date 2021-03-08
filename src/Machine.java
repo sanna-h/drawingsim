@@ -12,23 +12,19 @@ public class Machine {
 
     double canvasWidth = 210;
     double canvasHeight = 297;
-    double canvasGearing = 1;
     double canvasSpeed = 0.01;
 
-    double towerAGearing = 1;
     double towerASpeed = 2; // -0.5;
     double towerADistance = 301;
     double towerARadius = 60;
     double towerAStartAngle = 0;
 
-    double towerBGearing = 1;
     double towerBSpeed = 2.03; //1;
     double towerBDistance = 225;
     double towerBRadius = 45;
     double towerBStartAngle = 0;
 
     double towerABDistance = 180;
-    double towerCGearing = 1;
     double towerCSpeed = 0.5; //-1.5;
     double towerCRadius = 0;
     double towerCStartAngle = 0;
@@ -42,6 +38,10 @@ public class Machine {
     double penWidth = 0.7;
     boolean viewMachine = false;
 
+    double canvasGearing = 1;
+    double towerAGearing = 1;
+    double towerBGearing = 1;
+    double towerCGearing = 1;
 
     transient Rotor canvas;
     transient Rotor towerA;

@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.text.DecimalFormatSymbols;
@@ -28,6 +29,10 @@ class ModelProperty {
     DoubleConsumer setter;
     FocusTextField valueField;
     FocusTextField deltaField;
+}
+
+class Configuration {
+    String folder;
 }
 
 class FocusTextField extends JTextField {
@@ -53,10 +58,11 @@ class FocusTextField extends JTextField {
     }
 }
 
-public class DramasimController extends JPanel  implements KeyListener {
+public class DramasimController extends JPanel implements KeyListener {
 
     Machine model;
     DramasimView view;
+    Configuration configuration = new Configuration();
     ArrayList<ModelProperty> modelProperties = new ArrayList<>();
     String group;
     Locale currentLocale;
@@ -72,6 +78,8 @@ public class DramasimController extends JPanel  implements KeyListener {
 
         this.model = model;
         this.view = view;
+
+        loadConfiguration();
 
         group = "Setup";
         addProperty("Duration", model::getMachineTurns, model::setMachineTurns);
@@ -145,7 +153,6 @@ public class DramasimController extends JPanel  implements KeyListener {
         JButton loadButton = new JButton("Open file");
         loadButton.addActionListener(e -> loadFile());
         add(loadButton);
-
     }
 
     private void updateAndRedraw() {
@@ -159,6 +166,41 @@ public class DramasimController extends JPanel  implements KeyListener {
         model.viewMachine = viewMachine.isSelected();
         model.reset();
         view.redraw();
+    }
+
+    private String getCurrentPath() {
+        try {
+            return new File(this.getClass().getProtectionDomain().getCodeSource().getLocation()
+                    .toURI()).getPath() + "/";
+        } catch(URISyntaxException e) {
+            return "";
+        }
+    }
+
+    private void loadConfiguration() {
+        File fileToLoad = new File(getCurrentPath() + "dramasim.config");
+        String jsonString;
+        try {
+            jsonString = Files.readString(fileToLoad.toPath(), Charset.defaultCharset());
+        } catch (IOException ex) {
+            return;
+        }
+        InstanceCreator<Configuration> creator = type -> configuration;
+        Gson gson = new GsonBuilder().registerTypeAdapter(Configuration.class, creator).create();
+        gson.fromJson(jsonString, Configuration.class);
+    }
+
+    public void saveConfiguration() {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(configuration);
+        File fileToSave = new File(getCurrentPath() + "dramasim.config");
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileToSave));
+            writer.write(json);
+            writer.close();
+        } catch (IOException ex) {
+            // Do nothing.
+        }
     }
 
     private void applyDelta(double sign) {
@@ -181,6 +223,9 @@ public class DramasimController extends JPanel  implements KeyListener {
         String json = gson.toJson(model);
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Specify a file to save");
+        if (configuration.folder != null) {
+            fileChooser.setCurrentDirectory(new File(configuration.folder));
+        }
 
         int userSelection = fileChooser.showSaveDialog(view.getParent());
 
@@ -194,13 +239,18 @@ public class DramasimController extends JPanel  implements KeyListener {
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Failed to save file: " + ex.getMessage(), "Save", JOptionPane.ERROR_MESSAGE);
             }
+            // Save parent folder
+            configuration.folder = fileToSave.getParent();
+            saveConfiguration();
         }
     }
 
     private void loadFile() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Specify a file to load");
-
+        if (configuration.folder != null) {
+            fileChooser.setCurrentDirectory(new File(configuration.folder));
+        }
         int userSelection = fileChooser.showOpenDialog(view.getParent());
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
@@ -218,6 +268,9 @@ public class DramasimController extends JPanel  implements KeyListener {
             gson.fromJson(jsonString, Machine.class);
             showPropertyValues();
             updateAndRedraw();
+            // Save parent folder
+            configuration.folder = fileToLoad.getParent();
+            saveConfiguration();
         }
     }
 
@@ -278,7 +331,6 @@ public class DramasimController extends JPanel  implements KeyListener {
             if(e.getSource() instanceof FocusTextField)
                 ((FocusTextField) e.getSource()).selectAll();
         }
-
     }
 
     @Override
